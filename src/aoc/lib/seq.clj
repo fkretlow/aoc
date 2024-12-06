@@ -81,7 +81,10 @@
   (apply min (remove nil? xs)))
 
 
-(defn mapvals [f m] (into {} (for [[k v] m] [k (f v)])))
+(defn mapvals
+  "Apply f to all the values in m."
+  [f m]
+  (into {} (for [[k v] m] [k (f v)])))
 
 
 (defn count-unique
