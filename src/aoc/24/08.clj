@@ -1,7 +1,7 @@
 (ns aoc.24.08
   (:require
    [aoc.lib.io :refer [get-puzzle-input]]
-   [aoc.lib.matrix :refer [char-matrix mfind mget mhas? v+ v-]]
+   [aoc.lib.matrix :refer [char-matrix mfind mget mcontains? v+ v-]]
    [aoc.lib.seq :refer [all-pairs]]
    [clojure.string :as str]))
 
@@ -20,12 +20,12 @@
                          (all-pairs positions)))
                (vals antennas))
        (set)
-       (filter (partial mhas? grid))
+       (filter (partial mcontains? grid))
        (count)))
 
 
 (defn part-2 [{:keys [grid antennas]}]
-  (let [on-the-grid? (partial mhas? grid)]
+  (let [on-the-grid? (partial mcontains? grid)]
     (->> (mapcat (fn frequency-positions->antinodes [positions]
                    (mapcat (fn pair->antinodes [[p1 p2]]
                              (let [d (v- p2 p1)]

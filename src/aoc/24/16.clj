@@ -1,6 +1,6 @@
 (ns aoc.24.16
   (:require
-   [aoc.lib.graph :refer [dijkstra-all-min-distances]]
+   [aoc.lib.graph :refer [all-min-distances]]
    [aoc.lib.io :refer [get-puzzle-input]]
    [aoc.lib.matrix :refer [char-matrix mfind mget v+]]
    [aoc.lib.seq :refer [keys-with-min-values]]
@@ -46,7 +46,7 @@
 (defn part-1 [grid]
   (let [start (first (mfind grid #(= \S %)))
         end (first (mfind grid #(= \E %)))
-        min-distances (dijkstra-all-min-distances [start :e] (partial edgefn grid))]
+        min-distances (all-min-distances [start :e] (partial edgefn grid))]
     (->> min-distances
          (filter (fn [[[pos]]] (= pos end)))
          (map second)
@@ -55,7 +55,7 @@
 (defn- part-2 [grid]
   (let [start (first (mfind grid #(= \S %)))
         end (first (mfind grid #(= \E %)))
-        min-distances (dijkstra-all-min-distances [start :e] (partial edgefn grid))]
+        min-distances (all-min-distances [start :e] (partial edgefn grid))]
     (loop [Q (set (keys-with-min-values (filter (fn [[[pos]]] (= end pos)) min-distances)))
            V #{}]
       (if (empty? Q)
