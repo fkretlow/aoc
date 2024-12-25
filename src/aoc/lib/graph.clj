@@ -1,6 +1,7 @@
 (ns aoc.lib.graph
   (:require
    [clojure.data.priority-map :refer [priority-map-by]]
+   [clojure.set :as set]
    [jordanlewis.data.union-find :as uf]))
 
 
@@ -43,3 +44,42 @@
                (apply conj (pop Q) us)
                (reduce (fn [uf u] (uf/union uf v u)) dsf us)
                (conj processed? v))))))
+
+
+(defn remove-vertex
+  "Given an undirected graph `G` as a map of adjacency sets, and a vertex `v`,
+  remove `v` from `G`."
+  [G v]
+  (reduce (fn [G u] (update G u #(disj % v))) (dissoc G v) (G v)))
+
+
+(defn find-triangles
+  "Given an undirected graph `G` as map of adjacency sets, find all triangles
+  (cliques of 3 interconnected vertices) in `G`."
+  [G]
+  (loop [G G,
+         Q (->> (for [[v edges] G,
+                      :let [c (count edges)],
+                      :when (< 1 c)] [v c])
+                (sort-by second >)
+                (map first)),
+         triangles []]
+    (if (empty? Q)
+      triangles
+      (let [[v & Q'] Q,
+            us (G v),
+            G' (remove-vertex G v),
+            triangles' (->> (loop [us us, pairs []]
+                              (if (empty? us)
+                                pairs
+                                (let [u (first us)
+                                      us' (disj us u)
+                                      ws (G u)
+                                      pairs' (->> (set/intersection us' ws)
+                                                  (map (fn [w] [u w]))
+                                                  (apply conj pairs))]
+                                  (recur us' pairs'))))
+                            (map #(conj % v))
+                            (apply conj triangles))]
+        (recur G' Q' triangles')))))
+
