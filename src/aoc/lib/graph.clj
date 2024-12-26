@@ -83,3 +83,25 @@
                             (apply conj triangles))]
         (recur G' Q' triangles')))))
 
+
+(defn find-max-cliques
+  "Given an undirected graph `G` as a map of adjacency sets, find all maximal
+  cliques (sets of interconnected vertices) in `G` using the Bron-Kerbosch
+  algorithm."
+  [G]
+  ((fn -bron-kerbosch [R P X]
+     (if (and (empty? P) (empty? X))
+       (when (seq R) [R])
+       (loop [P P,
+              X X,
+              cliques []]
+         (if (empty? P)
+           cliques
+           (let [v (first P), Nv (G v)]
+             (recur (disj P v)
+                    (conj X v)
+                    (apply conj cliques (-bron-kerbosch (conj R v)
+                                                        (set/intersection P Nv)
+                                                        (set/intersection X Nv)))))))))
+   #{} (set (keys G)) #{}))
+

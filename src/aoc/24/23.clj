@@ -1,6 +1,6 @@
 (ns aoc.24.23
   (:require
-   [aoc.lib.graph :refer [find-triangles]]
+   [aoc.lib.graph :refer [find-max-cliques find-triangles]]
    [aoc.lib.io :refer [get-puzzle-input]]
    [clojure.string :as str]))
 
@@ -18,5 +18,13 @@
        (filter (fn [vs] (some #(str/starts-with? % "t") vs)))
        (count)))
 
+(defn part-2 [G]
+  (->> (find-max-cliques G)
+       (sort-by count >)
+       (first)
+       (sort)
+       (str/join ",")))
+
 (let [G (parse (get-puzzle-input 24 23))]
-  (println "Part 1:" (time (part-1 G))))
+  (println "Part 1:" (time (part-1 G)))
+  (println "Part 2:" (time (part-2 G))))
