@@ -27,6 +27,34 @@
                        (edgefn v)))))))
 
 
+(defn shortest-path
+  "Given two vertices `start` and `end` and a function `edgefn` that maps to
+  each vertex _v_ a seq of edges of the form _(u,w)_ where _u_ is a neighbor
+  of _v_ and the edge has weight _w_, find one path through the graph with
+  minimum sum of edge weights from `start` to `end` using Dijkstra's shortest
+  path algorithm."
+  [start end edgefn]
+  (loop [pm (priority-map-by
+             (fn [[done?_a d_0a] [done?_b d_0b]]
+               (cond (= done?_a done?_b) (< d_0a d_0b) done?_a false, :else true))
+             start [false 0 nil])]
+    (if (contains? pm end)
+      (loop [[v, :as path] (list end)]
+        (let [[_ _ parent] (get pm v)]
+          (if parent (recur (cons parent path)) path)))
+      (let [[v [done? d_0v]] (peek pm)]
+        (when-not done?
+          (recur (reduce (fn [pm [u d_vu]]
+                           (if (contains? pm u)
+                             (update pm u (fn [[done? d_0u, :as previous]]
+                                            (if (< (+ d_0v d_vu) d_0u)
+                                              [done? (+ d_0v d_vu) v]
+                                              previous)))
+                             (assoc pm u [false (+ d_0v d_vu) v])))
+                         (assoc-in pm [v 0] true)
+                         (edgefn v))))))))
+
+
 (defn connected-components
   "Given the set of vertices `V` in a graph and a function `edgefn` that maps
   to each vertex _v_ a seq of edges of the form _(u,...)_ where _u_ is a neighbor
