@@ -1,4 +1,4 @@
-(ns aoc.15.09
+(ns aoc.22.09
   (:require [aoc.lib.io :refer [get-puzzle-input]]
             [aoc.lib.matrix :refer [v+ v-]]
             [clojure.math :refer [signum]]
@@ -63,7 +63,7 @@
         :tail-positions
         count)))
 
-(let [input (get-puzzle-input 15 9)
+(let [input (get-puzzle-input 22 9)
       moves (parse-moves input)]
   (println "Part 1:" (time (simulate-moves 2 moves)))
   (println "Part 2:" (time (simulate-moves 10 moves))))
