@@ -39,7 +39,7 @@ Monkey 3:
 
 (defn- parse-monkey [monkey-str]
   (let [[_ starting-items-str operation-str test-str if-true-str if-false-str] (str/split-lines monkey-str)]
-    {:state {:items (parse-longs starting-items-str),
+    {:state {:items (map bigint (parse-longs starting-items-str)),
              :inspection-count 0},
      :spec {:op (-> (second (str/split operation-str #" = "))
                     (str/split #"\s+")
@@ -67,57 +67,72 @@ Monkey 3:
 (defn inspect-item
   "Given a monkey spec and an item worry level, simulate the monkey inspecting the
   item. Return a pair of the form `[throw-target new-item-worry-level]`."
-  [{op-spec :op throw-spec :throw, :as _monkey-spec} item-worry-level]
-  (let [new-item-worry-level (as-> item-worry-level x (perform-operation op-spec x) (floor-div x 3))
-        throw-target (calculate-throw-target throw-spec new-item-worry-level)]
-    [throw-target new-item-worry-level]))
+  ([monkey-spec item-worry-level] (inspect-item nil monkey-spec item-worry-level))
+  ([{:keys [relief?], :or {relief? true}}
+    {op-spec :op throw-spec :throw, :as _monkey-spec}
+    item-worry-level]
+   (let [new-item-worry-level (as-> item-worry-level x
+                                (perform-operation op-spec x)
+                                (if relief? (floor-div x 3) x))
+         throw-target (calculate-throw-target throw-spec new-item-worry-level)]
+     [throw-target new-item-worry-level])))
 
 (defn turn
   "Given a monkey's spec and state, simulate the monkey taking a single turn
   and inspecting/throwing all its items. Return pair of the form
   `[new-monkey-state {0 items-for-monkey-0, 1 items-for-monkey-1, ...}]`"
-  [monkey-spec monkey-state]
-  (let [items (:items monkey-state)
-        monkey-state' (-> monkey-state
-                          (dissoc :items)
-                          (update :inspection-count #(+ % (count items))))
-        throw-map (->> items
-                       (map (partial inspect-item monkey-spec))
-                       (map (fn [[throw-target item]] {throw-target [item]}))
-                       (apply merge-with into))]
-    [monkey-state' throw-map]))
+  ([monkey-spec monkey-state] (turn nil monkey-spec monkey-state))
+  ([opts monkey-spec monkey-state]
+   (let [items (:items monkey-state),
+         monkey-state' (-> monkey-state
+                           (dissoc :items)
+                           (update :inspection-count #(+ % (count items)))),
+         throw-map (->> items
+                        (map (partial inspect-item opts monkey-spec))
+                        (map (fn [[throw-target item]] {throw-target [item]}))
+                        (apply merge-with into))]
+     [monkey-state' throw-map])))
 
 (defn round
   "Given all the monkey specs and states at the start of a round,
   simulate all of the monkeys inpecting/throwing all their items
   one by one. Return the new monkey states."
-  [monkey-specs monkey-states]
-  (loop [monkey-states monkey-states
-         i 0]
-    (if (= (count monkey-states) i)
-      monkey-states
-      (let [spec (nth monkey-specs i)
-            state (nth monkey-states i)
-            [state' throw-map] (turn spec state)]
-        (-> monkey-states
-            (assoc i state')
-            (as-> states
-                  (reduce (fn [states [i items]] (update-in states [i :items] #(concat % items)))
-                          states
-                          throw-map))
-            (recur (inc i)))))))
+  ([monkey-specs monkey-states] (round nil monkey-specs monkey-states))
+  ([opts monkey-specs monkey-states]
+   (loop [monkey-states monkey-states
+          i 0]
+     (if (= (count monkey-states) i)
+       monkey-states
+       (let [spec (nth monkey-specs i)
+             state (nth monkey-states i)
+             [state' throw-map] (turn opts spec state)]
+         (-> monkey-states
+             (assoc i state')
+             (as-> states
+                   (reduce (fn [states [i items]] (update-in states [i :items] #(concat % items)))
+                           states
+                           throw-map))
+             (recur (inc i))))))))
+
+(defn calculate-monkey-business [monkey-states]
+  (->> monkey-states (map :inspection-count) (sort >) (take 2) (apply *)))
 
 (defn part-1 [monkeys]
   (let [monkey-specs (mapv :spec monkeys)
         monkey-states (mapv :state monkeys)]
     (->> (-> (iterate (partial round monkey-specs) monkey-states) (nth 20))
-         (map :inspection-count)
-         (sort >)
-         (take 2)
-         (apply *))))
+         (calculate-monkey-business))))
 
-(def ^:private test? false)
+(defn part-2 [monkeys]
+  (let [monkey-specs (mapv :spec monkeys)
+        monkey-states (mapv :state monkeys)]
+    (->> (-> (iterate (partial round {:relief? false} monkey-specs) monkey-states) (nth 1000))
+         (calculate-monkey-business))))
+
+(def ^:private test? true)
 
 (let [input (if test? test-input (get-puzzle-input 22 11))
       monkeys (map parse-monkey (str/split input #"\n\n"))]
-  (println "Part 1:" (time (part-1 monkeys))))
+  (println "Part 1:" (time (part-1 monkeys)))
+  (println "Part 2:" (time (part-2 monkeys))))
+
