@@ -20,3 +20,25 @@
                  (+ acc (/ (* (+ j1 j2) (- i1 i2)) 2.0)))
          0
          (partition 2 1 path))))
+
+
+(defn ->line-parameters
+  "Given two points on a line, return m and c in the forn `[m c]`
+  such that y = mx + c is true for both points."
+  [[p1 p2]]
+  (let [[[x1 y1] [x2 y2]] (sort-by first [p1 p2]),
+        m (/ (- y2 y1) (- x2 x1)),
+        c (- y1 (* m x1))]
+    [m c]))
+
+
+(defn intersection-of-lines
+  "Given the parameters of two lines y = mx + c in the form
+  `[m1 c1] [m2 c2]`, return the intersection point of the two lines,
+  if it exists. Returns `nil` if m1 = m2, regardless of whether
+  the lines are indentical."
+  [[m1 c1] [m2 c2]]
+  (when-not (= m1 m2)
+    (let [x (/ (- c2 c1) (- m1 m2))]
+      [x (+ (* m1 x) c1)])))
+
