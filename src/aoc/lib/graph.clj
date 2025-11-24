@@ -1,9 +1,13 @@
 (ns aoc.lib.graph
   (:require
+   [clojure+.hashp :as cphashp]
+   [clojure+.print :as cpprint]
    [clojure.data.priority-map :refer [priority-map-by]]
    [clojure.set :as set]
    [jordanlewis.data.union-find :as uf]))
 
+(cphashp/install!)
+(cpprint/install!)
 
 (defn all-min-distances
   "Given a vertex `v0` to start from and a function `edgefn` that maps to
@@ -133,3 +137,48 @@
                                                         (set/intersection X Nv)))))))))
    #{} (set (keys G)) #{}))
 
+
+(defn floyd-warshall
+  "Given a directed weighted graph as a set of vertices _V_ and a map of edges _E_
+  that maps ordered pairs of vertices to edge weights, calculate the minimum distances
+  between all connected, ordered pairs of vertices in the graph and return them as a
+  map from pairs of vertices to path lengths.
+  See https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm for an explanation
+  of the algorithm."
+  [V E]
+  (let [V (vec V)
+        ; enumerate the vertices
+        get-index (into {} (map-indexed #(-> [%2 %1]) V))
+        n (count V)
+        ; compute a n x n matrix D where D[i,j] is the distance
+        ; between the vertices enumerated i and j
+        D (as-> (vec (repeat n (vec (repeat n nil)))) $
+            ; write the weights of all edges (u,v) into D
+            (reduce (fn [D [[u v] w_uv]]
+                      (assoc-in D [(get-index u) (get-index v)] w_uv))
+                    $
+                    E)
+            ; write distance 0 from every edge to itself into D
+            (reduce (fn [D i] (assoc-in D [i i] 0))
+                    $
+                    (range n))
+            ; perform the actual algorithm: for every k in [0..n), find the shortest
+            ; distances between all pairs of vertices i,j using only vertices from
+            ; {1..k} as in-between points along the way.
+            (reduce (fn [D [k i j]]
+                      (let [d (get-in D [i j])
+                            d_ik (get-in D [i k])
+                            d_kj (get-in D [k j])]
+                        (cond
+                          (or (nil? d_ik) (nil? d_kj)) D,
+                          (or (nil? d) (> d (+ d_ik d_kj))) (assoc-in D [i j] (+ d_ik d_kj))
+                          :else D)))
+                    $
+                    (for [k (range n), i (range n), j (range n)] [k i j])))]
+    ; collect the matrix into a map from vertex pairs to minimum distances
+    (reduce (fn [M [i j]]
+              (if-let [d (get-in D [i j])]
+                (assoc M [(nth V i) (nth V j)] d)
+                M))
+            nil
+            (for [i (range n), j (range n), :when (not= i j)] [i j]))))
