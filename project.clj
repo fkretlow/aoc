@@ -8,4 +8,5 @@
                  [io.github.tonsky/clojure-plus "1.7.0"]
                  [org.clojure/clojure "1.11.1"]
                  [org.clojure/data.priority-map "1.2.0"]]
-  :repl-options {:init-ns aoc.23.main})
+  :repl-options {:init-ns aoc.user
+                 :init (init)})
