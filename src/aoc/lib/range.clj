@@ -14,12 +14,18 @@
 
 
 (defn difference
-  "Given two ranges r1 and r2, return a vector of one 
+  "Given two ranges r1 and r2, return a vector of one
   or two ranges whose elements are in r1 but not in r2."
   [r1 r2]
   (if-let [d (intersection r1 r2)]
     (filterv #(< (% 0) (% 1)) [[(r1 0) (d 0)] [(d 1) (r1 1)]])
     [r1]))
+
+
+(defn contains?
+  "Return whether `x` is contained in the range [`start` `end`)."
+  [[start end] x]
+  (and (<= start x) (< x end)))
 
 
 (defn shift [d r] [(+ d (r 0)) (+ d (r 1))])
