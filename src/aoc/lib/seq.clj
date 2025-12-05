@@ -17,7 +17,7 @@
 (defn window-indices
   "Generate a lazy seq of all \"windows\" with the given `radius` around the elements of a
   vector or array with the given `length`, in the form `[i start end]`, end non-inclusive.
-  
+
   Example:
   `1 3` -> `[0 0 2] [1 0 3] [2 1 3]`"
   [radius length]
@@ -81,7 +81,9 @@
   (apply min (remove nil? xs)))
 
 
-(defn mapvals [f m] (into {} (for [[k v] m] [k (f v)])))
+(defn mapvals
+  "Return a new map `m'` where `(= (m' k) (f (m k)))` for all `k,v` in `m`."
+  [f m] (into {} (for [[k v] m] [k (f v)])))
 
 
 (defn count-unique
@@ -116,3 +118,12 @@
                    (> v min) acc))
            (let [[k v] (first m)] [v [k]])
            (rest m))))
+
+
+(defn collect-indices
+  "Transform a sequential `xs` into a map from distinct elements to vectors of indices
+  into `xs` in ascending order. I.e. `[:a :b :c :a]` -> `{:a [0 3], :b [1], :c [2]}`"
+  [xs]
+  (reduce (fn [acc [i x]] (update acc x #(conj (or % []) i))) nil (map-indexed vector xs)))
+
+
