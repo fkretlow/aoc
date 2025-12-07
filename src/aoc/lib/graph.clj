@@ -1,13 +1,8 @@
 (ns aoc.lib.graph
   (:require
-   [clojure+.hashp :as cphashp]
-   [clojure+.print :as cpprint]
    [clojure.data.priority-map :refer [priority-map-by]]
    [clojure.set :as set]
    [jordanlewis.data.union-find :as uf]))
-
-(cphashp/install!)
-(cpprint/install!)
 
 (defn all-min-distances
   "Given a vertex `v0` to start from and a function `edgefn` that maps to

@@ -54,13 +54,24 @@
 
 (defn mshape [m] [(count m) (count (first m))])
 
-(defn mcontains? [m [i j]] (let [[h w] (mshape m)] (and (< -1 i h) (< -1 j w))))
+(defn mcontains?
+  "Return whether the given point is inside the given matrix."
+  [m [i j]] (let [[h w] (mshape m)] (and (< -1 i h) (< -1 j w))))
 
 (defn mfind [m pred]
   (let [[h w] (mshape m)]
     (for [i (range h), j (range w)
           :when (pred (mget m [i j]))]
       [i j])))
+
+(defn madj
+  "Return all points that are horizontally, vertically, or diagonally adjacent
+  to the given point in the given matrix."
+  [m [i j]]
+  (->> (for [i' (range (- i 1) (+ i 2)), j' (range (- j 1) (+ j 2))] [i' j'])
+       (filter #(mcontains? m %))
+       (filter #(not= [i j] %))))
+
 
 (defn v+ [& vs] (mapv (partial apply +) (apply (partial map vector) vs)))
 (defn v- [& vs] (mapv (partial apply -) (apply (partial map vector) vs)))
