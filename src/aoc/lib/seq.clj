@@ -127,3 +127,14 @@
   (reduce (fn [acc [i x]] (update acc x #(conj (or % []) i))) nil (map-indexed vector xs)))
 
 
+(defn split
+  "Split the collection `xs` on (consecutive) elements satisfying `sep?`.
+  E.g. `(split nil? [1 2 nil 3 nil nil 4])` returns `((1 2) (3) (4))`."
+  [sep? xs]
+  (lazy-seq
+   (when (seq xs)
+     (if (sep? (first xs))
+       (split sep? (rest xs))
+       (let [[group xs'] (split-with (complement sep?) xs)]
+         (cons group (split sep? xs')))))))
+
