@@ -2,7 +2,7 @@
   "Set operations on range sets, i.e. sets of integers expressed in
   terms of seqs of integer ranges of the form [start end) where the
   individual ranges don't overlap or touch."
-  (:refer-clojure :exclude [contains?]))
+  (:refer-clojure :exclude [contains? count]))
 
 
 (defn merge-overlapping [range-set]
@@ -42,7 +42,7 @@
 
 
 (defn difference [& range-sets]
-  (let [n (count range-sets)]
+  (let [n (clojure.core/count range-sets)]
     (->> (sort-by first (concat (mapcat inclusion-steps (first range-sets))
                                 (mapcat #(mapcat exclusion-steps %) (rest range-sets))))
          (steps->ranges n (dec n)))))
@@ -50,7 +50,7 @@
 
 (defn intersection [& range-sets]
   (->> (sort-by first (mapcat #(mapcat inclusion-steps %) range-sets))
-       (steps->ranges (count range-sets) 0)))
+       (steps->ranges (clojure.core/count range-sets) 0)))
 
 
 (defn count-elements [range-set]
@@ -64,7 +64,7 @@
     (if (seq steps)
       (let [[j op] (first steps)
             cur-true' (op cur-true)]
-        (if (and (< i j) (= (count range-sets) cur-true) (< cur-true' cur-true))
+        (if (and (< i j) (= (clojure.core/count range-sets) cur-true) (< cur-true' cur-true))
           true
           (recur cur-true' j (rest steps))))
       false)))
@@ -72,3 +72,10 @@
 
 (defn contains? [range-set n]
   (boolean (some #(< (dec (% 0)) n (% 1)) range-set)))
+
+
+(defn count
+  "Count the elements in the range set. Assumes that ranges are not
+  overlapping, i.e. you might need to call `merge-overlapping` first."
+  [range-set]
+  (apply + (map (fn [[start end]] (- end start)) range-set)))
